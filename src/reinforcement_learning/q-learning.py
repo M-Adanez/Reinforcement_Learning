@@ -56,7 +56,8 @@ def q_learning(
     return V, Q, policy
 
 def run_q_learning(
-        config: dict
+        config: dict,
+        plot_results: bool
     ) -> tuple:
     """Run Q-learning with the given configuration and plot the results."""
 
@@ -68,8 +69,9 @@ def run_q_learning(
     config["Q"] = Q.tolist()
     config["policy"] = policy.tolist()
 
-    plot_value_function(V, env)
-    plot_policy(policy, env)
+    if plot_results:
+        plot_value_function(V, env)
+        plot_policy(policy, env)
 
     return config
 
@@ -99,7 +101,7 @@ if __name__ == "__main__":
                 "n_episodes": 10_000
             }
         }
-        data = run_q_learning(config)
+        data = run_q_learning(config, plot_results=True)
         results.append(data)
 
     with open(output_path, "w") as f:
