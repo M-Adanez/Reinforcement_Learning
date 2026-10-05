@@ -2,11 +2,11 @@
 from src.reinforcement_learning.tools import plot_policy, plot_value_function
 from src.reinforcement_learning.env import GridworldEnv
 
-import os
 import json
 import numpy as np
 from icecream import ic
 from pathlib import Path
+
 
 def epsilon_greedy(Q, state, epsilon):
     """Select an action using an epsilon-greedy policy."""
@@ -56,8 +56,7 @@ def q_learning(
     return V, Q, policy
 
 def run_q_learning(
-        config: dict,
-        output_path: Path
+        config: dict
     ) -> tuple:
     """Run Q-learning with the given configuration and plot the results."""
 
@@ -82,6 +81,7 @@ if __name__ == "__main__":
 
     results = []
 
+    # env determinista + estocastico
     for is_slippery in [False, True]:
         ic(is_slippery)
         config: dict = {
@@ -99,7 +99,7 @@ if __name__ == "__main__":
                 "n_episodes": 10_000
             }
         }
-        data = run_q_learning(config, output_path)
+        data = run_q_learning(config)
         results.append(data)
 
     with open(output_path, "w") as f:
