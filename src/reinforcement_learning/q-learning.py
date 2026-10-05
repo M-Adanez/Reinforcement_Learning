@@ -19,13 +19,13 @@ def q_learning(
         learning_rate: float = 0.1,
         epsilon: float = 0.1,
         gamma: float = 0.99,
-        n_episodes: int = 100
+        n_episodes: int = 1_000
     ) -> tuple:
     """Train a Q-learning agent and return V, Q, and the greedy policy."""
 
     n_states = len(env.P)
     n_actions = len(env.P[0])
-    Q = np.zeros(shape=(n_states, n_actions))
+    Q = np.zeros(shape=(n_states, n_actions), dtype=np.float64)
 
     for episode in range(n_episodes):
         if episode % 1_000 == 0:
@@ -58,7 +58,7 @@ def q_learning(
 def run_q_learning(
         config: dict,
         plot_results: bool
-    ) -> tuple:
+    ) -> dict:
     """Run Q-learning with the given configuration and plot the results."""
 
     np.random.seed(config["seed"])
