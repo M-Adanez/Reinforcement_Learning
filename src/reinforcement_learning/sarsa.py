@@ -32,7 +32,7 @@ def n_sarsa(env: GridworldEnv,
         done = False
         action=epsilon_greedy(q,state,e,n_actions)
         steps=0
-        while not done or steps<=n:
+        while (not done) and (steps<=n):
             next_state, reward, terminated, truncated, _ = env.step(action)
             next_action=epsilon_greedy(q,next_state,e,n_actions)
 
@@ -79,7 +79,7 @@ for is_slippery in [True,False]:
                     "learning_rate": 0.5,
                     "epsilon": 0.3,
                     "gamma": 0.9,
-                    "n_episodes": 10_000
+                    "n_episodes": 500
                 }
             }
     env=GridworldEnv(is_slippery=is_slippery)
@@ -89,5 +89,6 @@ for is_slippery in [True,False]:
                        gamma=config["hyperparams"]["gamma"],
                        seed=config["seed"],
                        n_episodes=config["hyperparams"]["n_episodes"])
-
+    plot_value_function(v, env)
+    plot_policy(policy, env)
     
