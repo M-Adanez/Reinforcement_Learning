@@ -17,28 +17,43 @@ def n_sarsa(env: GridworldEnv,
             e:float,
             lr:float,
             gamma:float,
+            seed:int,
+            n_episodes:int,
             n:int = 1 ):
+    np.random.seed(seed)
     n_states=len(env.P)
     n_actions=len(env.P[0])
     policy=np.zeros(n_states)
     q=np.zeros((n_states,n_actions))
+    rewards=[]
 
-    episodes=range(1_000)#????
-    for episode in episodes:
+    for episode in range(n_episodes):
         state, _ = env.reset()
         done = False
         action=epsilon_greedy(q,state,e,n_actions)
-
-        while not done:
+        steps=0
+        while not done or steps<=n:
             next_state, reward, terminated, truncated, _ = env.step(action)
-            done=terminated or truncated
-
             next_action=epsilon_greedy(q,next_state,e,n_actions)
+
+            done=terminated or truncated
+            rewards.append(reward)
+            
             current_q=q[state][action]
             q[state][action]= current_q - lr * (current_q - (reward + (gamma * q[next_state][next_action])))
 
             state=next_state
             action=next_action
+            steps+=1
+            
+
+        g=0
+        for i in range(len(rewards)):
+            g+=(gamma**i)*rewards[i]
+        g+=(gamma**(len(rewards)))*q[state][action]
+
+        
+
 
     policy = np.array([
         np.argmax(q[state]) for state in range(n_states)
@@ -50,11 +65,29 @@ def n_sarsa(env: GridworldEnv,
     return v, q, policy 
     
 
-env=GridworldEnv(is_slippery=False)
-v,q,policy=n_sarsa(env=env,
-        e=0.3,
-        lr=0.5,
-        gamma=0.9)
 
-plot_value_function(v, env)
-plot_policy(policy, env)
+for is_slippery in [True,False]:
+    config: dict = {
+                "algorithm": "SARSA",
+                "seed": 123,
+                "env": "GridworldEnv",
+                "env_params": {
+                    "is_slippery": is_slippery
+                },
+                "optuna": False,
+                "hyperparams": {
+                    "learning_rate": 0.5,
+                    "epsilon": 0.3,
+                    "gamma": 0.9,
+                    "n_episodes": 10_000
+                }
+            }
+    env=GridworldEnv(is_slippery=is_slippery)
+    v,q,policy=n_sarsa(env=env,
+                       e=config["hyperparams"]["epsilon"],
+                       lr=config["hyperparams"]["learning_rate"],
+                       gamma=config["hyperparams"]["gamma"],
+                       seed=config["seed"],
+                       n_episodes=config["hyperparams"]["n_episodes"])
+
+    
