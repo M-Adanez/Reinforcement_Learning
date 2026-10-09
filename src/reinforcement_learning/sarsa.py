@@ -3,7 +3,6 @@ from reinforcement_learning.tools import plot_value_function, plot_policy
 import numpy as np
 
 
-#CREO QUE TIENES MAL UNA COSA
 def epsilon_greedy(q,state,epsilon,n_actions):
     """Select an action using an epsilon-greedy policy."""
     best=np.argmax(q[state])
@@ -25,33 +24,50 @@ def n_sarsa(env: GridworldEnv,
     n_actions=len(env.P[0])
     policy=np.zeros(n_states)
     q=np.zeros((n_states,n_actions))
-    rewards=[]
 
     for episode in range(n_episodes):
         state, _ = env.reset()
         done = False
         action=epsilon_greedy(q,state,e,n_actions)
-        steps=0
-        while (not done) and (steps<=n):
+        states_path=[state]
+        actions_path=[action]
+        rewards=[]
+        
+        while (not done):
             next_state, reward, terminated, truncated, _ = env.step(action)
             next_action=epsilon_greedy(q,next_state,e,n_actions)
+            actions_path.append(next_action)
+            states_path.append(next_state) #save next step
+            rewards.append(reward)
 
             done=terminated or truncated
-            rewards.append(reward)
-            
+
+
+            #1.Sarsa ESTO NO BORRAR
+
+            #_______________________________
             current_q=q[state][action]
             q[state][action]= current_q - lr * (current_q - (reward + (gamma * q[next_state][next_action])))
+            #_______________________________
+
+
+            #n-Sarsa
+            #S1->S2->S3->S4
+            #  R1  R2  R3
+            # if len(states_path)-1>=n:
+            #     current_q=q[states_path[len(states_path)-1-n]][actions_path[len(actions_path)-1-n]]
+            #     previous=0
+            #     for i in range(n):
+            #         previous+=rewards[len(rewards)-1-n]*gamma**i
+            #     previous+=q[state][action]
+
+            #     q[states_path[len(states_path)-1-n]][actions_path[len(actions_path)-1-n]]=current_q + lr*(current_q-reward + previous)
+
 
             state=next_state
             action=next_action
-            steps+=1
+        
             
-
-        g=0
-        for i in range(len(rewards)):
-            g+=(gamma**i)*rewards[i]
-        g+=(gamma**(len(rewards)))*q[state][action]
-
         
 
 
@@ -66,7 +82,7 @@ def n_sarsa(env: GridworldEnv,
     
 
 
-for is_slippery in [True,False]:
+for is_slippery in [False,True]:
     config: dict = {
                 "algorithm": "SARSA",
                 "seed": 123,
@@ -88,7 +104,8 @@ for is_slippery in [True,False]:
                        lr=config["hyperparams"]["learning_rate"],
                        gamma=config["hyperparams"]["gamma"],
                        seed=config["seed"],
-                       n_episodes=config["hyperparams"]["n_episodes"])
+                       n_episodes=config["hyperparams"]["n_episodes"],
+                       n=3)
     plot_value_function(v, env)
     plot_policy(policy, env)
     
