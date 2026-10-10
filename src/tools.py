@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from pygame.time import wait
 
 ACTION_ARROWS = {0: "←", 1: "↓", 2: "→", 3: "↑"}
 
@@ -175,6 +176,7 @@ def plot_policy(
     env,
     action_arrows=ACTION_ARROWS,
     title="Policy Visualization π(s)",
+    algorithm_name: str | None = None,
 ):
     """Draws policy arrows in each cell using auto-extracted env metadata."""
     info = extract_env_info(env)
@@ -242,6 +244,8 @@ def plot_policy(
                     weight="bold",
                 )
 
+    if algorithm_name is not None:
+        title = algorithm_name + " " + title
     plt.title(title, fontsize=14, pad=10)
     plt.tight_layout()
     plt.show()
@@ -250,7 +254,7 @@ def plot_policy(
 # =====================================================================
 # TOOL 3: VALUE STATE VISUALIZER
 # =====================================================================
-def plot_value_function(V, env, title="State-Value Function V(s)"):
+def plot_value_function(V, env, title="State-Value Function V(s)", algorithm_name: str | None = None):
     """Draws a heatmap overlay of state values V(s) auto-extracting metadata."""
     info = extract_env_info(env)
     shape, walls, holes, terminals = (
@@ -323,6 +327,9 @@ def plot_value_function(V, env, title="State-Value Function V(s)"):
                 fontsize=11,
                 weight="bold",
             )
+
+    if algorithm_name is not None:
+        title = algorithm_name + " " + title
 
     fig.colorbar(im, ax=ax, shrink=0.8)
     plt.title(title, fontsize=14, pad=10)

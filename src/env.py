@@ -1,6 +1,7 @@
+import time
+
 import numpy as np
 import pygame
-import reinforcement_learning.tools as tools
 
 class GridworldEnv:
     """3x4 Russell & Norvig Gridworld Environment (Gymnasium Interface).
@@ -289,10 +290,9 @@ class GridworldEnv:
             pygame.quit()
             self.window = None  # Reset window handle
 
-import time
-# import tools
-
 if __name__ == "__main__":
+    from .tools import plot_environment
+
     # 1. custom env with pygame render
     env = GridworldEnv(render_mode="human")
     obs, info = env.reset()
@@ -305,7 +305,7 @@ if __name__ == "__main__":
 
     time.sleep(1)
     env.close()
-    tools.plot_environment(env)
+    plot_environment(env)
     
 
     # # 2. custom env with ANSI render
