@@ -49,13 +49,37 @@ def create_config(
     }
     return config
 
+def run_simulation(
+        env,
+        policy,
+        gamma
+    ):
+    state, info = env.reset()
+    done = False
+    i = 0
+    g = 0
+
+    while not done:
+        action = policy[state]
+        next_state, reward, terminated, truncated, _ = env.step(action)
+        g += (gamma ** i) * reward
+        done = terminated or truncated
+        i += 1
+        state = next_state
+    return g
+
 def evaluate_policy(
         env,
-        policy
+        policy,
+        gamma,
+        n_runs
     ):
-    g = 0
-    # TODO: hacer n veces -> env.reset, while not done: step() y calcular return (g)
-    return g
+    returns = [
+        run_simulation(env, policy, gamma)
+        for _ in range(n_runs)
+    ]
+
+    return sum(returns) / len(returns)
 
 def objective(trial):
     seed = 123
@@ -155,7 +179,11 @@ def objective(trial):
 
     config["V"], config["Q"], config["policy"] = algorithm.train(env, **hyperparams)
 
-    config["avg_return"] = evaluate_policy(env, config["policy"])
+    config["avg_return"] = evaluate_policy(
+        env=env,
+        policy=config["policy"],
+        gamma=config["hyperparams"]["gamma"],
+        n_runs=100) 
 
     return config["avg_return"]
     
