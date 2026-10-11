@@ -15,7 +15,7 @@ def epsilon_greedy(Q, state, epsilon):
     return np.argmax(Q[state])
 
 def montecarlo(
-        env: GridworldEnv,
+        env,
         epsilon: float = 0.3,
         gamma: float = 0.99,
         n_episodes: int = 1000

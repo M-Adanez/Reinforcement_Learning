@@ -12,7 +12,7 @@ def epsilon_greedy(q,state,epsilon,n_actions):
         return np.random.choice(choices)
     return best
 
-def n_sarsa(env: GridworldEnv,
+def n_sarsa(env,
             epsilon:float,
             learning_rate:float,
             gamma:float,

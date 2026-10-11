@@ -15,7 +15,7 @@ def epsilon_greedy(Q, state, epsilon):
     return np.argmax(Q[state])
 
 def q_learning(
-        env: GridworldEnv,
+        env,
         learning_rate: float = 0.1,
         epsilon: float = 0.1,
         gamma: float = 0.99,

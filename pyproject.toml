@@ -9,6 +9,7 @@ dependencies = [
     "icecream>=2.2.0",
     "matplotlib>=3.11.2",
     "numpy>=2.5.3",
+    "optuna>=5.0.0",
     "pygame>=2.6.1",
 ]
 
