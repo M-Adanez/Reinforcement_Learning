@@ -51,7 +51,7 @@ if __name__ == "__main__":
     results = []
 
     results_dir = Path("results/")
-    output_file = Path("q_learning.json")
+    output_file = Path("grid-world-results.json")
     output_path = results_dir / output_file
 
     for algorithm in ALGORITHMS:
