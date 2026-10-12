@@ -16,6 +16,7 @@ def n_sarsa(env,
             epsilon:float,
             learning_rate:float,
             gamma:float,
+            seed:int,
             n_episodes:int,
             n:int = 1 ):
 
