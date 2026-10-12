@@ -17,6 +17,7 @@ def n_sarsa(env,
             learning_rate:float,
             gamma:float,
             n_episodes:int,
+            seed:int = 123,
             n:int = 1 ):
 
     if isinstance(env, GridworldEnv):
