@@ -58,9 +58,11 @@ if __name__ == "__main__":
         print(f"Training algorithm {algorithm.__name__}")
         config = create_config(SEED, IS_SLIPPERY, algorithm.__name__)
         np.random.seed(config.get('seed')) 
+        # the error does not hinder execution
         env = GridworldEnv(**config.get('env_params'))
 
         start_time = time.time()
+        # the error does not hinder execution
         V, Q, policy = algorithm(env, **config.get('hyperparams'))
         total_time = time.time() - start_time
 
