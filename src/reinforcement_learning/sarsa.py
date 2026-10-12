@@ -18,8 +18,13 @@ def n_sarsa(env,
             gamma:float,
             n_episodes:int,
             n:int = 1 ):
-    n_states=len(env.P)
-    n_actions=len(env.P[0])
+
+    if isinstance(env, GridworldEnv):
+        P = env.P
+    else:
+        P = env.unwrapped.P
+    n_states=len(P)
+    n_actions=len(P[0])
     policy=np.zeros(n_states)
     q=np.zeros((n_states,n_actions))
 

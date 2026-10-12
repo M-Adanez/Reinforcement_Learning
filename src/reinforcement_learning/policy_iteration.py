@@ -1,9 +1,15 @@
+
+from .env import GridworldEnv
+
 import numpy as np
 
 def policy_iteration(env, gamma = 0.999, epsilon = 1e-8):
     'Policy iteration algorithm'
 
-    P = env.P
+    if isinstance(env, GridworldEnv):
+        P = env.P
+    else:
+        P = env.unwrapped.P
     n_states = len(P)  
     n_actions = len(P[0])
 

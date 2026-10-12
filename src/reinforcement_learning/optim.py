@@ -5,9 +5,11 @@ from .policy_iteration import policy_iteration
 from .sarsa import n_sarsa
 from .montecarlo import montecarlo
 
+import json
 import optuna
 import gymnasium as gym
 from enum import Enum
+from torch.utils.tensorboard import SummaryWriter
 
 class Algorithm(Enum):
     VALUE_ITERATION = "value_iteration"
@@ -15,7 +17,6 @@ class Algorithm(Enum):
     MONTE_CARLO = "monte_carlo"
     Q_LEARNING = "q_learning"
     SARSA = "sarsa"
-    N_SARSA = "n_sarsa"
 
     def train(self, env, **hyperparams):
         if self == Algorithm.VALUE_ITERATION:
@@ -26,9 +27,7 @@ class Algorithm(Enum):
             return montecarlo(env, **hyperparams)
         elif self == Algorithm.Q_LEARNING:
             return q_learning(env, **hyperparams)
-        elif self == Algorithm.SARSA: # 1-SARSA
-            return n_sarsa(env, **hyperparams)
-        else: # N-SARSA
+        else: # SARSA, no N-SARSA
             return n_sarsa(env, **hyperparams)
 
 def create_config(
@@ -58,15 +57,18 @@ def run_simulation(
     done = False
     i = 0
     g = 0
+    success = False
 
     while not done:
         action = policy[state]
         next_state, reward, terminated, truncated, _ = env.step(action)
         g += (gamma ** i) * reward
+        success = success or (reward == 20) # taxi-v4 
         done = terminated or truncated
         i += 1
         state = next_state
-    return g
+        
+    return g, success
 
 def evaluate_policy(
         env,
@@ -74,14 +76,20 @@ def evaluate_policy(
         gamma,
         n_runs
     ):
-    returns = [
+    results = [
         run_simulation(env, policy, gamma)
         for _ in range(n_runs)
     ]
 
-    return sum(returns) / len(returns)
+    returns = [result[0] for result in results]
+    successes = [result[1] for result in results]
 
-def objective(trial):
+    return {
+        "avg_return": sum(returns) / n_runs,
+        "success_rate": sum(successes) / n_runs,
+    }
+
+def objective(trial, writer):
     seed = 123
     algorithm = Algorithm(
         trial.suggest_categorical(
@@ -89,14 +97,12 @@ def objective(trial):
             [
                 a.value 
                 for a in Algorithm
-                if a != Algorithm.N_SARSA # TODO: incluir n-sarsa cuando funcione
             ]
         )
     )
 
-    # TODO: fix env
-    env_name = ""
-    env_params = {}
+    env_name = "Taxi-v4"
+    env_params = {"is_rainy": True}
     env = gym.make(env_name, **env_params)
 
     if algorithm in (Algorithm.VALUE_ITERATION, Algorithm.POLICY_ITERATION):
@@ -108,7 +114,7 @@ def objective(trial):
     elif algorithm == Algorithm.MONTE_CARLO:
         hyperparams = {
             "epsilon": trial.suggest_float(
-                "epsilon", 0.01, 1.0 # e-greedy
+                "epsilon-greedy", 0.01, 1.0 # e-greedy
             ),
             "gamma": trial.suggest_float(
                 "gamma", 0.90, 0.999
@@ -120,7 +126,7 @@ def objective(trial):
     elif algorithm == Algorithm.SARSA:
         hyperparams = {
             "epsilon": trial.suggest_float(
-                "epsilon", 0.01, 1.0
+                "epsilon-greedy", 0.01, 1.0
             ),
             "learning_rate": trial.suggest_float(
                 "learning_rate", 1e-4, 1e-1, log=True
@@ -133,31 +139,13 @@ def objective(trial):
             ),
             "n": 1
         }
-    elif algorithm == Algorithm.N_SARSA:
-        hyperparams = {
-            "epsilon": trial.suggest_float(
-                "epsilon", 0.01, 1.0
-            ),
-            "learning_rate": trial.suggest_float(
-                "learning_rate", 1e-4, 1e-1, log=True
-            ),
-            "gamma": trial.suggest_float(
-                "gamma", 0.90, 0.999
-            ),
-            "n_episodes": trial.suggest_int(
-                "n_episodes", 1_000, 50_000, log=True
-            ),
-            "n": trial.suggest_int(
-                "n", 1, 10
-            )
-        }
     elif algorithm == Algorithm.Q_LEARNING:
         hyperparams = {
             "learning_rate": trial.suggest_float(
                 "learning_rate", 1e-4, 1e-1, log=True
             ),
             "epsilon": trial.suggest_float(
-                "epsilon", 0.01, 1.0
+                "epsilon-greedy", 0.01, 1.0
             ),
             "gamma": trial.suggest_float(
                 "gamma", 0.90, 0.999
@@ -179,25 +167,71 @@ def objective(trial):
 
     config["V"], config["Q"], config["policy"] = algorithm.train(env, **hyperparams)
 
-    config["avg_return"] = evaluate_policy(
+    metrics = evaluate_policy(
         env=env,
         policy=config["policy"],
         gamma=config["hyperparams"]["gamma"],
-        n_runs=100) 
+        n_runs=100,
+    )
 
-    return config["avg_return"]
+    config["avg_return"] = metrics["avg_return"]
+    config["success_rate"] = metrics["success_rate"]
+
+    writer.add_scalar(
+        f"{algorithm.value}/avg_return",
+        config["avg_return"],
+        trial.number,
+    )
+    writer.add_scalar(
+        f"{algorithm.value}/success_rate",
+        config["success_rate"],
+        trial.number,
+    )
+
+    return float(config["avg_return"])
     
 
 
 if __name__ == "__main__":
-    study = optuna.create_study(
-        study_name="rl_hyperparameter_optimization",
-        direction="maximize",
-    )
+    writer = SummaryWriter(log_dir="runs/taxi_rl")
+    try:
+        study = optuna.create_study(
+            study_name="taxi_rl_optimization",
+            storage="sqlite:///optuna_results.db",
+            load_if_exists=True,
+            direction="maximize",
+        )
 
-    study.optimize(
-        objective,
-        n_trials=100,
-    )
+        study.optimize(
+            lambda trial: objective(trial, writer),
+            n_trials=1000,
+            n_jobs=-1,
+            show_progress_bar=True
+        )
 
-    # TODO: analizar mejores hyperparams
+        results = {
+            "study_name": study.study_name,
+            "best_value": study.best_value,
+            "best_params": study.best_params,
+            "trials": [
+                {
+                    "number": trial.number,
+                    "value": trial.value,
+                    "params": trial.params,
+                    "state": trial.state.name,
+                }
+                for trial in study.trials
+            ],
+        }
+
+        with open("./results/taxi_rl_results.json", "w") as f:
+            json.dump(results, f, indent=4)
+
+        print("Best value:", study.best_value)
+        print("Best parameters:", study.best_params)
+        print("Results saved to taxi_rl_results.json")
+
+
+
+    finally:
+        writer.close()

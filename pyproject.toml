@@ -11,6 +11,8 @@ dependencies = [
     "numpy>=2.5.3",
     "optuna>=5.0.0",
     "pygame>=2.6.1",
+    "tensorboard>=2.21.0",
+    "torch>=2.14.1",
 ]
 
 [project.scripts]

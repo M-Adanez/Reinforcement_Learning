@@ -1,9 +1,15 @@
+
+from .env import GridworldEnv
+
 import numpy as np
 
 def value_iteration(env, gamma = 0.999, epsilon = 1e-8):
     '''Value iteration algo using q-function''' 
 
-    P = env.P
+    if isinstance(env, GridworldEnv):
+        P = env.P
+    else:
+        P = env.unwrapped.P
     n_states = len(P)
     n_actions = len(P[0])
 

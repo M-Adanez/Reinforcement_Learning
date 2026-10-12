@@ -21,8 +21,13 @@ def montecarlo(
         n_episodes: int = 1000
     ) -> tuple:
 
-    n_states = len(env.P)
-    n_actions = len(env.P[0])
+    if isinstance(env, GridworldEnv):
+        P = env.P
+    else:
+        P = env.unwrapped.P
+
+    n_states = len(P)
+    n_actions = len(P[0])
     Q = np.zeros(shape=(n_states, n_actions))
     returns = np.zeros(shape=(n_states, n_actions))
     num = np.zeros(shape=(n_states, n_actions))

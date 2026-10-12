@@ -23,8 +23,12 @@ def q_learning(
     ) -> tuple:
     """Train a Q-learning agent and return V, Q, and the greedy policy."""
 
-    n_states = len(env.P)
-    n_actions = len(env.P[0])
+    if isinstance(env, GridworldEnv):
+        P = env.P
+    else:
+        P = env.unwrapped.P
+    n_states = len(P)
+    n_actions = len(P[0])
     Q = np.zeros(shape=(n_states, n_actions), dtype=np.float64)
 
     for episode in range(n_episodes):
