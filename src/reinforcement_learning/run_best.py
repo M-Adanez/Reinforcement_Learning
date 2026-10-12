@@ -15,7 +15,7 @@ import gymnasium as gym
 from PIL import Image
 
 SHOULD_TRAIN = False
-SHOULD_SAVE_SIMULATION = True
+SHOULD_SAVE_SIMULATION = False
 
 study_name = "taxi_rl_optimization"
 env_name = "Taxi-v4"
@@ -23,7 +23,7 @@ env_params = {"is_rainy": True}
 
 study = opt.load_study(
     study_name=study_name,
-    storage="sqlite:///optuna_results.db",
+    storage="sqlite:///optuna_results_taxi_v1.db",
 )
 
 print("# BEST CONFIGURATION")
